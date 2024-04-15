@@ -27,6 +27,16 @@ from wagtailgeowidget.app_settings import (
 )
 from wagtailgeowidget.helpers import geosgeometry_str_to_struct
 
+from django.conf import settings
+
+AVAILABLE_LANGUAGES = list(
+    getattr(
+        settings,
+        "MODELTRANSLATION_LANGUAGES",
+        (val for val, label in settings.LANGUAGES),
+    )
+)
+
 translations = {
     "error_message_invalid_location": _(
         "Invalid location coordinate, use Latitude and Longitude (example: 59.329,18.06858)"
@@ -40,7 +50,7 @@ translations = {
 }
 
 
-if WAGTAIL_VERSION >= (6, 0):
+if True:
     from django.utils.safestring import mark_safe
 
     class GoogleMapsField(forms.HiddenInput):
@@ -162,11 +172,14 @@ if WAGTAIL_VERSION >= (6, 0):
 
         def __init__(self, *args, **kwargs):
             self.geocoder = kwargs.pop("geocoder", geocoders.NOMINATIM)
-
+            self.title_fields = [
+                "title_" + lang
+                for lang in AVAILABLE_LANGUAGES
+            ]
             super().__init__(*args, **kwargs)
 
         def build_attrs(self, *args, **kwargs):
-            options = {"translations": translations}
+            options = { "translations": translations, "title_fields": self.title_fields }
             params = {}
             if self.geocoder == geocoders.MAPBOX:
                 from wagtailgeowidget.app_settings import (

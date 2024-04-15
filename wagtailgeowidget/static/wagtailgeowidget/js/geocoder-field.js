@@ -7,6 +7,7 @@ function GeocoderField(options) {
     var $el = $("#" + id);
 
     this.translations = options.translations;
+    this.title_fields = options.title_fields;
     this.field = $el;
     this.delayTime = 1000;
 
@@ -110,6 +111,7 @@ NominatimGeocoderField.prototype.geocodeSearch = function (query) {
         new URLSearchParams({
             q: query,
             format: "json",
+            namedetails: "true",
         });
 
     fetch(url)
@@ -134,8 +136,18 @@ NominatimGeocoderField.prototype.geocodeSearch = function (query) {
 
             var location = data[0];
             self.field.trigger("searchGeocoded", [
-                { lat: location.lat, lng: location.lon },
+                { lat: location.lat, lng: location.lon }
             ]);
+            
+            self.title_fields.forEach(field => {
+                $("#id_" + field)[0].value = "";
+            });
+            for (const [key, value] of Object.entries(location.namedetails)) {
+                let key_title = key.replace("name", "title").replace(":", "_")
+                if(self.title_fields.includes(key_title)){
+                    $("#id_" + key_title)[0].value = value;
+                }
+            }
         });
 };
 

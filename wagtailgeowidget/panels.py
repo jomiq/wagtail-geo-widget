@@ -60,7 +60,6 @@ class GeoPanel(GoogleMapsPanel):
 class GeoAddressPanel(FieldPanel):
     def __init__(self, *args, **kwargs):
         self.geocoder = kwargs.pop("geocoder", geocoders.NOMINATIM)
-
         super().__init__(*args, **kwargs)
 
     def get_form_options(self):
