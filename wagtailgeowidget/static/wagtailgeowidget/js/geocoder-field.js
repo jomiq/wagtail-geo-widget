@@ -17,11 +17,13 @@ function GeocoderField(options) {
 
         onSearch: ({ currentValue }) => {
             const api =
-                "https://nominatim.openstreetmap.org/search?" + new URLSearchParams({
-                    q: currentValue,
-                    format: "json",
-                    namedetails: "true",
-                });
+                "https://nominatim.openstreetmap.org/search?" + new URLSearchParams([
+                    ["q", currentValue],
+                    ["format", "json"],
+                    ["namedetails", "true"],
+                    ["accept-language", "sv"],
+                    ["countrycodes", "se,fi,no,ru"],
+                ]);
             self.clearFieldMessage({field: self.field})
             return new Promise((resolve) => {
                 fetch(api)
