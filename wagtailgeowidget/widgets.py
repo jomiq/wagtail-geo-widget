@@ -47,6 +47,7 @@ translations = {
     ),
     "enter_location": _("Enter a location"),
     "initialize_map": _("Click here to initialize map"),
+    "no_results": _("No results for %s!"),
 }
 
 
@@ -200,7 +201,14 @@ if True:
 
         @property
         def media(self):
+            css = {
+                "all": [
+                    "wagtailgeowidget/css/autocomplete.css",
+                ]
+            }
+            
             js = [
+                "wagtailgeowidget/js/autocomplete.js",
                 "wagtailgeowidget/js/geocoder-field.js",
                 "wagtailgeowidget/js/geocoder-field-controller.js",
             ]
@@ -221,6 +229,7 @@ if True:
 
             return forms.Media(
                 js=js,
+                css=css,
             )
 
         def render(self, name, value, attrs=None, renderer=None):
