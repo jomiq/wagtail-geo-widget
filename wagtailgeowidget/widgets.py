@@ -9,7 +9,6 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 from wagtail import VERSION as WAGTAIL_VERSION
 from wagtail.telepath import register
-from wagtail.utils.widgets import WidgetWithScript
 from wagtail.widget_adapters import WidgetAdapter
 
 try:
@@ -93,7 +92,7 @@ if True:
                         "lng": result["x"],
                     }
 
-            if self.value_data and isinstance(self.value_data, Point):
+            if self.value_data and Point and isinstance(self.value_data, Point):
                 data["defaultLocation"] = {
                     "lat": self.value_data.y,
                     "lng": self.value_data.x,
@@ -285,7 +284,8 @@ if True:
                         "lat": result["y"],
                         "lng": result["x"],
                     }
-            elif self.value_data and isinstance(self.value_data, Point):
+
+            if self.value_data and Point and isinstance(self.value_data, Point):
                 data["defaultLocation"] = {
                     "lat": self.value_data.y,
                     "lng": self.value_data.x,
@@ -302,13 +302,13 @@ if True:
                 css={
                     "all": (
                         "wagtailgeowidget/css/leaflet-field.css",
-                        "https://unpkg.com/leaflet@1.7.1/dist/leaflet.css",
+                        "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
                     )
                 },
                 js=(
                     "wagtailgeowidget/js/leaflet-field.js",
                     "wagtailgeowidget/js/leaflet-field-controller.js",
-                    "https://unpkg.com/leaflet@1.7.1/dist/leaflet.js",
+                    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
                 ),
             )
 
@@ -345,6 +345,7 @@ if True:
             )
 
 else:
+    from wagtail.utils.widgets import WidgetWithScript
 
     class GoogleMapsField(WidgetWithScript, forms.HiddenInput):
         address_field = None
@@ -572,12 +573,12 @@ else:
                 css={
                     "all": (
                         "wagtailgeowidget/css/leaflet-field.css",
-                        "https://unpkg.com/leaflet@1.7.1/dist/leaflet.css",
+                        "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
                     )
                 },
                 js=(
                     "wagtailgeowidget/js/leaflet-field.js",
-                    "https://unpkg.com/leaflet@1.7.1/dist/leaflet.js",
+                    "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
                 ),
             )
 
