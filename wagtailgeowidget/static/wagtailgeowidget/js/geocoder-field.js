@@ -7,27 +7,75 @@ function GeocoderField(options) {
     var $el = $("#" + id);
 
     this.translations = options.translations;
+    this.title_fields = options.title_fields;
     this.field = $el;
     this.delayTime = 1000;
 
-    $el.on("input", function (_e) {
-        clearTimeout(self._timeoutId);
+    this.field.attr("autocomplete", "off");
+    this.autocomplete = new Autocomplete(id, {
+        delay: this.delayTime,
 
-        var query = $(this).val();
+        onSearch: ({ currentValue }) => {
+            const api =
+                "https://nominatim.openstreetmap.org/search?" + new URLSearchParams([
+                    ["q", currentValue],
+                    ["format", "json"],
+                    ["namedetails", "true"],
+                    ["accept-language", "sv"],
+                    ["countrycodes", "se,fi,no,ru"],
+                ]);
+            self.clearFieldMessage({field: self.field})
+            return new Promise((resolve) => {
+                fetch(api)
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (!data.length) {
+                            self.displayWarning(
+                                self.translations.no_results.replace(
+                                    "%s",
+                                    currentValue
+                                ),
+                                {
+                                    field: self.field,
+                                }
+                            );
+                            resolve({});
+                        }
+                        resolve(data);
+                    })
+                    .catch((error) => {
+                        self.displayWarning(
+                            self.translations.error_could_not_geocode_address.replace(
+                                "%s",
+                                error
+                            ),
+                            {
+                                field: self.field,
+                            }
+                        );
+                        return;
+                    });
+            });
+        },
 
-        if (query === "") {
-            return;
-        }
+        onResults: ({ matches }) =>
+            matches.map(({ display_name }) => `<li>${display_name}</li>`).join(""),
 
-        self._timeoutId = setTimeout(function () {
-            self.geocodeSearch(query);
-        }, self.delayTime);
-    });
+        onSubmit: ({ index, element, object }) => {
+            var location = object;
+            self.field.trigger("searchGeocoded", [
+                { lat: location.lat, lng: location.lon }
+            ]);
 
-    $el.on("keydown", function (e) {
-        if (e.keyCode === 13) {
-            e.preventDefault();
-            e.stopPropagation();
+            self.title_fields.forEach(field => {
+                $("#id_" + field)[0].value = "";
+            });
+            for (const [key, value] of Object.entries(location.namedetails)) {
+                let key_title = key.replace("name", "title").replace(":", "_")
+                if (self.title_fields.includes(key_title)) {
+                    $("#id_" + key_title)[0].value = value;
+                }
+            }
         }
     });
 }
@@ -97,6 +145,10 @@ GeocoderField.prototype.displayWarning = function (msg, options) {
 // Nominatim
 function NominatimGeocoderField(options) {
     GeocoderField.call(this, options);
+    var autocomplete = new Autocomplete(self.id);
+    autocomplete.onSearch(({ currentValue }) => {
+        self.geocodeSearch(currentValue);
+    })
 }
 
 NominatimGeocoderField.prototype = Object.create(GeocoderField.prototype);
@@ -110,6 +162,7 @@ NominatimGeocoderField.prototype.geocodeSearch = function (query) {
         new URLSearchParams({
             q: query,
             format: "json",
+            namedetails: "true",
         });
 
     fetch(url)
@@ -134,8 +187,19 @@ NominatimGeocoderField.prototype.geocodeSearch = function (query) {
 
             var location = data[0];
             self.field.trigger("searchGeocoded", [
-                { lat: location.lat, lng: location.lon },
+                { lat: location.lat, lng: location.lon }
             ]);
+
+            self.title_fields.forEach(field => {
+                $("#id_" + field)[0].value = "";
+            });
+            for (const [key, value] of Object.entries(location.namedetails)) {
+                let key_title = key.replace("name", "title").replace(":", "_")
+                if (self.title_fields.includes(key_title)) {
+                    $("#id_" + key_title)[0].value = value;
+                }
+            }
+
         })
         .catch((error) => {
             self.displayWarning("Nominatim Error: " + error, {
